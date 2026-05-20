@@ -55,7 +55,13 @@ class NominatimOpenstreetmapClient
     private function sendRequest(HttpMethod $method, string $url, array $options = []): Response
     {
         $attempt = 0;
-        $pendingRequest = Http::baseUrl(self::BASE_URL)
+        $pendingRequest = Http::baseUrl(self::BASE_URL);
+
+        if ($method === HttpMethod::GET || $method === HttpMethod::HEAD) {
+            $pendingRequest = $pendingRequest->withQueryParameters($options);
+        }
+
+        $pendingRequest = $pendingRequest
             ->beforeSending(function () use (&$attempt, $method, $url, $options) {
                 $attempt++;
                 Log::channel('nominatim-client')->debug('NominatimOpenstreetmapClient: request sent', [
@@ -84,7 +90,12 @@ class NominatimOpenstreetmapClient
             );
 
         try {
-            $response = $pendingRequest->send($method->value, $url, $options);
+            $response = $pendingRequest->send(
+                $method->value,
+                $url,
+                $method === HttpMethod::GET || $method === HttpMethod::HEAD ? [] : $options
+            );
+
             if (!empty($response['error'])) {
                 throw new NominatimOpenstreetmapClientException($response['error']);
             }

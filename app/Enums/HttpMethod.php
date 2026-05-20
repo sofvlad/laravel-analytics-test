@@ -6,6 +6,7 @@ namespace App\Enums;
 
 enum HttpMethod: string
 {
+    case HEAD = 'HEAD';
     case GET = 'GET';
     case POST = 'POST';
     case PUT = 'PUT';
