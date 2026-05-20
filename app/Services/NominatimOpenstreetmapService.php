@@ -40,7 +40,7 @@ readonly class NominatimOpenstreetmapService
             'ip' => $ip,
             'lat' => $lat,
             'lon' => $lon,
-            'city' => $address['city'] ?: $address['town'] ?: null,
+            'city' => $address['city'] ?? $address['town'] ?? null,
             'country' => $address['country'] ?: null,
             'user_agent' => $userAgent,
             'visited_at' => Carbon::now(),

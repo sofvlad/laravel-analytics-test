@@ -32,7 +32,7 @@ class VisitController extends Controller
         return response()->json([
             'message' => !empty($visit) ? 'Visit recorded' : 'Visit is not recorded',
             'visit' => $visit,
-        ], 201);
+        ], !empty($visit) ? 201 : 200);
     }
 }
 

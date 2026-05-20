@@ -35,8 +35,8 @@ readonly class TwoIpService
 
         return $this->repository->save([
             'ip' => $request->ip(),
-            'city' => $geoData['city'] ?: null,
-            'country' => $geoData['country'] ?: null,
+            'city' => $geoData['city'] ?? null,
+            'country' => $geoData['country'] ?? null,
             'user_agent' => $request->userAgent(),
             'visited_at' => Carbon::now(),
         ]);
