@@ -22,7 +22,7 @@ class VisitRepository implements VisitRepositoryInterface
      */
     public function getHourlyStats(int $days): Collection
     {
-        return Visit::selectRaw("strftime('%Y-%m-%d %H:00', visited_at) as hour, COUNT(DISTINCT ip_address) as unique_visits")
+        return Visit::selectRaw("strftime('%Y-%m-%d %H:00', visited_at) as hour, COUNT(DISTINCT ip) as unique_visits")
             ->where('visited_at', '>=', Carbon::now()->subDays($days))
             ->groupBy('hour')
             ->orderBy('hour')
@@ -34,7 +34,7 @@ class VisitRepository implements VisitRepositoryInterface
      */
     public function getCityStats(int $days): Collection
     {
-        return Visit::selectRaw('city, COUNT(DISTINCT ip_address) as unique_visits')
+        return Visit::selectRaw('city, COUNT(DISTINCT ip) as unique_visits')
             ->where('visited_at', '>=', Carbon::now()->subDays($days))
             ->whereNotNull('city')
             ->groupBy('city')

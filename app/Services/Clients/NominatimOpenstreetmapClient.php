@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Services\Clients;
 
 use App\Enums\HttpMethod;
-use App\Exceptions\TwoIp\TwoIpClientException;
-use App\Exceptions\TwoIp\TwoIpRequestFailedException;
-use App\Exceptions\TwoIp\TwoIpServiceUnavailableException;
+use App\Exceptions\NominatimOpenstreetmap\NominatimOpenstreetmapClientException;
+use App\Exceptions\NominatimOpenstreetmap\NominatimOpenstreetmapRequestFailedException;
+use App\Exceptions\NominatimOpenstreetmap\NominatimOpenstreetmapServiceUnavailableException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
@@ -15,31 +15,30 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-class TwoIpClient
+class NominatimOpenstreetmapClient
 {
-    private const string BASE_URL = 'https://api.2ip.io';
+    private const string BASE_URL = 'https://nominatim.openstreetmap.org';
 
     /**
      * Массив задержек перед повтором при слудующей попытки (мс)
      */
     private const array DELAY_MS = [500, 1000, 2000];
 
-    public function __construct(
-        private readonly string $token,
-    ) {
-    }
-
     /**
-     * @throws TwoIpClientException
+     * @throws NominatimOpenstreetmapClientException
      * @throws Throwable
      */
-    public function getGeoData(?string $ip = null): array
+    public function getReverse(float $latitude, float $longitude, bool $addressDetails = false): array
     {
         return $this->sendRequest(
             HttpMethod::GET,
-            '/' . $ip,
+            '/reverse',
             [
-                'token' => $this->token,
+                'lat' => $latitude,
+                'lon' => $longitude,
+                'addressdetails' => $addressDetails,
+                'format' => 'json',
+                'accept-language' => 'en',
             ]
         )->json();
     }
@@ -59,7 +58,7 @@ class TwoIpClient
         $pendingRequest = Http::baseUrl(self::BASE_URL)
             ->beforeSending(function () use (&$attempt, $method, $url, $options) {
                 $attempt++;
-                Log::channel('2ip-client')->debug('TwoIpClient: request sent', [
+                Log::channel('2ip-client')->debug('NominatimOpenstreetmapClient: request sent', [
                     'attempt' => $attempt,
                     'method'  => $method->value,
                     'url'     => $url,
@@ -67,7 +66,7 @@ class TwoIpClient
                 ]);
             })
             ->afterResponse(function (Response $response) use (&$attempt) {
-                Log::channel('2ip-client')->debug('TwoIpClient: response received', [
+                Log::channel('2ip-client')->debug('NominatimOpenstreetmapClient: response received', [
                     'status' => $response->status(),
                     'headers' => $response->getHeaders(),
                     'body' => $response->body(),
@@ -76,7 +75,7 @@ class TwoIpClient
             ->retry(
                 self::DELAY_MS,
                 function (Throwable $e) {
-                    Log::channel('2ip-client')->warning('TwoIpClient: request attempt failed', [
+                    Log::channel('2ip-client')->warning('NominatimOpenstreetmapClient: request attempt failed', [
                         'error' => $e->getMessage(),
                     ]);
 
@@ -87,17 +86,17 @@ class TwoIpClient
         try {
             $response = $pendingRequest->send($method->value, $url, $options);
             if (!empty($response['error'])) {
-                throw new TwoIpClientException($response['error']);
+                throw new NominatimOpenstreetmapClientException($response['error']);
             }
 
             return $response;
         } catch (Throwable $e) {
             if ($e instanceof ConnectionException) {
-                throw new TwoIpServiceUnavailableException(previous: $e);
+                throw new NominatimOpenstreetmapServiceUnavailableException(previous: $e);
             }
 
             if ($e instanceof RequestException) {
-                throw new TwoIpRequestFailedException(previous: $e);
+                throw new NominatimOpenstreetmapRequestFailedException(previous: $e);
             }
 
             throw $e;

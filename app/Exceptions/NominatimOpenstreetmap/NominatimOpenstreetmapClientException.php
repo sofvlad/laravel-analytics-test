@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Exceptions;
+namespace App\Exceptions\NominatimOpenstreetmap;
 
 use RuntimeException;
 use Throwable;
 
-class TwoIpClientException extends RuntimeException
+class NominatimOpenstreetmapClientException extends RuntimeException
 {
     public function __construct(string $message, ?Throwable $previous = null)
     {

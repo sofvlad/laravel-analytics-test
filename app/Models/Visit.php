@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Visit extends Model
 {
     protected $fillable = [
-        'ip_address',
+        'ip',
+        'lat',
+        'lon',
         'city',
         'country',
         'user_agent',
@@ -15,6 +17,8 @@ class Visit extends Model
     ];
 
     protected $casts = [
+        'lat' => 'float',
+        'lon' => 'float',
         'visited_at' => 'datetime',
     ];
 }
