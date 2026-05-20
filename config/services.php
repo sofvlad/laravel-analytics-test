@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    '2ip' => [
+        'token' => env('2IP_TOKEN'),
+    ],
+
 ];
