@@ -36,7 +36,7 @@ class NominatimOpenstreetmapClient
             [
                 'lat' => $latitude,
                 'lon' => $longitude,
-                'addressdetails' => $addressDetails,
+                'addressdetails' => (int)$addressDetails,
                 'format' => 'json',
                 'accept-language' => 'en',
             ]
@@ -58,7 +58,7 @@ class NominatimOpenstreetmapClient
         $pendingRequest = Http::baseUrl(self::BASE_URL)
             ->beforeSending(function () use (&$attempt, $method, $url, $options) {
                 $attempt++;
-                Log::channel('2ip-client')->debug('NominatimOpenstreetmapClient: request sent', [
+                Log::channel('nominatim-client')->debug('NominatimOpenstreetmapClient: request sent', [
                     'attempt' => $attempt,
                     'method'  => $method->value,
                     'url'     => $url,
@@ -66,7 +66,7 @@ class NominatimOpenstreetmapClient
                 ]);
             })
             ->afterResponse(function (Response $response) use (&$attempt) {
-                Log::channel('2ip-client')->debug('NominatimOpenstreetmapClient: response received', [
+                Log::channel('nominatim-client')->debug('NominatimOpenstreetmapClient: response received', [
                     'status' => $response->status(),
                     'headers' => $response->getHeaders(),
                     'body' => $response->body(),
@@ -75,7 +75,7 @@ class NominatimOpenstreetmapClient
             ->retry(
                 self::DELAY_MS,
                 function (Throwable $e) {
-                    Log::channel('2ip-client')->warning('NominatimOpenstreetmapClient: request attempt failed', [
+                    Log::channel('nominatim-client')->warning('NominatimOpenstreetmapClient: request attempt failed', [
                         'error' => $e->getMessage(),
                     ]);
 

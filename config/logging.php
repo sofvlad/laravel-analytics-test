@@ -134,6 +134,13 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'nominatim-client' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/nominatim-client.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];
