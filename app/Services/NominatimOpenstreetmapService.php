@@ -38,8 +38,8 @@ readonly class NominatimOpenstreetmapService
 
         return $this->repository->save([
             'ip' => $ip,
-            'city' => $address['city'] ?? $address['town'] ?? null,
-            'country' => $geoData['country'] ?: null,
+            'city' => $address['city'] ?: $address['town'] ?: null,
+            'country' => $address['country'] ?: null,
             'user_agent' => $userAgent,
             'visited_at' => Carbon::now(),
         ]);
