@@ -5,7 +5,6 @@ namespace App\Providers;
 use App\Repositories\VisitRepository;
 use App\Repositories\VisitRepositoryInterface;
 use App\Services\Clients\TwoIpClient;
-use App\Services\TwoIpService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +23,6 @@ class AppServiceProvider extends ServiceProvider
                 config('services.2ip.token')
             );
         });
-        $this->app->singleton(TwoIpService::class);
         $this->app->singleton(VisitRepositoryInterface::class, VisitRepository::class);
     }
 

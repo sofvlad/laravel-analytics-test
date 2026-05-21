@@ -3,7 +3,7 @@ import VisitCharts from '@/components/visit-charts';
 import { dashboard } from '@/routes';
 
 const embedCode = `(async function() {
-    const serverUrl = 'YOUR_SERVER_URL/api/v1/visit/track';
+    const serverUrl = 'YOUR_SERVER_URL/api/v1/visits/track';
 
     async function sendTrackRequest(data = {}) {
         try {

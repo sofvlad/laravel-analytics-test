@@ -9,20 +9,29 @@ use App\Exceptions\NominatimOpenstreetmap\NominatimOpenstreetmapClientException;
 use App\Exceptions\NominatimOpenstreetmap\NominatimOpenstreetmapRequestFailedException;
 use App\Exceptions\NominatimOpenstreetmap\NominatimOpenstreetmapServiceUnavailableException;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Promises\LazyPromise;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Throwable;
 
-class NominatimOpenstreetmapClient
+class NominatimOpenstreetmapClient extends Client
 {
     private const string BASE_URL = 'https://nominatim.openstreetmap.org';
 
+    private const string LOGGER_CHANNEL_NAME = 'nominatim-client';
+
+    public function __construct()
+    {
+        parent::__construct(static::LOGGER_CHANNEL_NAME);
+    }
+
     /**
-     * Массив задержек перед повтором при слудующей попытки (мс)
+     * @inheritDoc
      */
-    private const array DELAY_MS = [500, 1000, 2000];
+    protected function getBaseURL(): string
+    {
+        return static::BASE_URL;
+    }
 
     /**
      * @throws NominatimOpenstreetmapClientException
@@ -44,73 +53,30 @@ class NominatimOpenstreetmapClient
     }
 
     /**
-     * Выполняет запрос с повторными попытками и экспоненциальной задержкой.
-     *
-     * @param HttpMethod $method
-     * @param string $url
-     * @param array $options
-     * @return Response
-     * @throws Throwable
+     * @inheritDoc
      */
-    private function sendRequest(HttpMethod $method, string $url, array $options = []): Response
+    protected function handleResponse(LazyPromise|Response $response): Response|LazyPromise
     {
-        $attempt = 0;
-        $pendingRequest = Http::baseUrl(self::BASE_URL);
-
-        if ($method === HttpMethod::GET || $method === HttpMethod::HEAD) {
-            $pendingRequest = $pendingRequest->withQueryParameters($options);
+        if (!empty($response['error'])) {
+            throw new NominatimOpenstreetmapClientException($response['error']);
         }
 
-        $pendingRequest = $pendingRequest
-            ->beforeSending(function () use (&$attempt, $method, $url, $options) {
-                $attempt++;
-                Log::channel('nominatim-client')->debug('NominatimOpenstreetmapClient: request sent', [
-                    'attempt' => $attempt,
-                    'method'  => $method->value,
-                    'url'     => $url,
-                    'options' => $options,
-                ]);
-            })
-            ->afterResponse(function (Response $response) use (&$attempt) {
-                Log::channel('nominatim-client')->debug('NominatimOpenstreetmapClient: response received', [
-                    'status' => $response->status(),
-                    'headers' => $response->getHeaders(),
-                    'body' => $response->body(),
-                ]);
-            })
-            ->retry(
-                self::DELAY_MS,
-                function (Throwable $e) {
-                    Log::channel('nominatim-client')->warning('NominatimOpenstreetmapClient: request attempt failed', [
-                        'error' => $e->getMessage(),
-                    ]);
+        return parent::handleResponse($response);
+    }
 
-                    return $e instanceof ConnectionException;
-                }
-            );
-
-        try {
-            $response = $pendingRequest->send(
-                $method->value,
-                $url,
-                $method === HttpMethod::GET || $method === HttpMethod::HEAD ? [] : $options
-            );
-
-            if (!empty($response['error'])) {
-                throw new NominatimOpenstreetmapClientException($response['error']);
-            }
-
-            return $response;
-        } catch (Throwable $e) {
-            if ($e instanceof ConnectionException) {
-                throw new NominatimOpenstreetmapServiceUnavailableException(previous: $e);
-            }
-
-            if ($e instanceof RequestException) {
-                throw new NominatimOpenstreetmapRequestFailedException(previous: $e);
-            }
-
-            throw $e;
+    /**
+     * @inheritDoc
+     */
+    protected function throwClientException(Throwable $e): void
+    {
+        if ($e instanceof ConnectionException) {
+            throw new NominatimOpenstreetmapServiceUnavailableException(previous: $e);
         }
+
+        if ($e instanceof RequestException) {
+            throw new NominatimOpenstreetmapRequestFailedException(previous: $e);
+        }
+
+        parent::throwClientException($e);
     }
 }
