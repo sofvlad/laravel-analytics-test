@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Exceptions\TwoIp\TwoIpClientException;
 use App\Models\Visit;
 use App\Repositories\VisitRepositoryInterface;
 use App\Services\Clients\NominatimOpenstreetmapClient;
+use DateTimeInterface;
 use Illuminate\Support\Carbon;
 use Throwable;
 
@@ -24,16 +24,18 @@ readonly class NominatimOpenstreetmapService
      * @param string $userAgent
      * @param float $lat
      * @param float $lon
-     * @return Visit|null
+     * @param Carbon $visitedAt
+     * @return Visit
      * @throws Throwable
      */
-    public function store(string $ip, string $userAgent, float $lat, float $lon): ?Visit
-    {
-        try {
-            $geoData = $this->client->getReverse($lat, $lon, true);
-        } catch (TwoIpClientException) {
-            return null;
-        }
+    public function store(
+        string $ip,
+        string $userAgent,
+        float $lat,
+        float $lon,
+        Carbon $visitedAt
+    ): Visit {
+        $geoData = $this->client->getReverse($lat, $lon, true);
         $address = $geoData['address'];
 
         return $this->repository->save([
@@ -43,7 +45,7 @@ readonly class NominatimOpenstreetmapService
             'city' => $address['city'] ?? $address['town'] ?? null,
             'country' => $address['country'] ?: null,
             'user_agent' => $userAgent,
-            'visited_at' => Carbon::now(),
+            'visited_at' => $visitedAt,
         ]);
     }
 }

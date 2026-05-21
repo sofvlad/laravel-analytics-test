@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Exceptions\TwoIp\TwoIpClientException;
 use App\Models\Visit;
 use App\Repositories\VisitRepositoryInterface;
 use App\Services\Clients\TwoIpClient;
-use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Throwable;
 
@@ -21,24 +19,22 @@ readonly class TwoIpService
     }
 
     /**
-     * @param Request $request
-     * @return Visit|null
+     * @param string $ip
+     * @param string $userAgent
+     * @param Carbon $visitedAt
+     * @return Visit
      * @throws Throwable
      */
-    public function store(Request $request): ?Visit
+    public function store(string $ip, string $userAgent, Carbon $visitedAt): Visit
     {
-        try {
-            $geoData = $this->client->getGeoData($request->ip());
-        } catch (TwoIpClientException) {
-            return null;
-        }
+        $geoData = $this->client->getGeoData($ip);
 
         return $this->repository->save([
-            'ip' => $request->ip(),
+            'ip' => $ip,
             'city' => $geoData['city'] ?? null,
             'country' => $geoData['country'] ?? null,
-            'user_agent' => $request->userAgent(),
-            'visited_at' => Carbon::now(),
+            'user_agent' => $userAgent,
+            'visited_at' => $visitedAt,
         ]);
     }
 }

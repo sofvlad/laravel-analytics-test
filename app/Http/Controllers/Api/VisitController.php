@@ -3,36 +3,26 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\NominatimOpenstreetmapService;
-use App\Services\TwoIpService;
+use App\Jobs\ProcessVisitTrackJob;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Throwable;
+use Illuminate\Support\Carbon;
 
 class VisitController extends Controller
 {
-    /**
-     * @param Request $request
-     * @param NominatimOpenstreetmapService $nominatimOpenstreetmapService
-     * @param TwoIpService $twoIpService
-     * @return JsonResponse
-     * @throws Throwable
-     */
-    public function track(
-        Request $request,
-        NominatimOpenstreetmapService $nominatimOpenstreetmapService,
-        TwoIpService $twoIpService
-    ): JsonResponse {
-        $lat = $request->post('lat');
-        $lon = $request->post('lon');
-        $visit = !empty($lat) && !empty($lon)
-            ? $nominatimOpenstreetmapService->store($request->ip(), $request->userAgent(), $lat, $lon)
-            : $twoIpService->store($request);
+    public function track(Request $request): JsonResponse
+    {
+        ProcessVisitTrackJob::dispatch(
+            ip: $request->ip(),
+            userAgent: $request->userAgent(),
+            latitude: $request->post('lat'),
+            longitude: $request->post('lon'),
+            visitedAt: Carbon::now()
+        )->onQueue('visit-track');
 
         return response()->json([
-            'message' => !empty($visit) ? 'Visit recorded' : 'Visit is not recorded',
-            'visit' => $visit,
-        ], !empty($visit) ? 201 : 200);
+            'message' => 'Visit tracking scheduled',
+        ], 202);
     }
 }
 
