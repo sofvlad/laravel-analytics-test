@@ -19,7 +19,7 @@ class VisitController extends Controller
      */
     public function hourlyStats(Request $request): JsonResponse
     {
-        $days = $request->input('days', 7);
+        $days = $request->input('days', 1);
 
         $stats = $this->repository->getHourlyStats($days);
 
@@ -35,7 +35,7 @@ class VisitController extends Controller
      */
     public function cityStats(Request $request): JsonResponse
     {
-        $days = $request->input('days', 7);
+        $days = $request->input('days', 1);
 
         $stats = $this->repository->getCityStats($days);
 

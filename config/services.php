@@ -37,6 +37,7 @@ return [
 
     '2ip' => [
         'token' => env('2IP_TOKEN'),
+        'test_ip' => env('2IP_TEST_IP'),
     ],
 
 ];

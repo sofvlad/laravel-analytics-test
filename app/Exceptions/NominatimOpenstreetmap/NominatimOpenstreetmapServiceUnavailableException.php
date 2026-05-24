@@ -10,6 +10,9 @@ final class NominatimOpenstreetmapServiceUnavailableException extends NominatimO
 {
     private const string MESSAGE = 'Сервис временно недоступен. Пожалуйста, попробуйте позже.';
 
+    /**
+     * @inheritDoc
+     */
     public function __construct(string $message = self::MESSAGE, ?Throwable $previous = null)
     {
         parent::__construct($message, $previous);

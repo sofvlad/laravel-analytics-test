@@ -10,6 +10,9 @@ final class NominatimOpenstreetmapRequestFailedException extends NominatimOpenst
 {
     private const string MESSAGE = 'Не удалось выполнить запрос к внешнему сервису. Пожалуйста, попробуйте позже.';
 
+    /**
+     * @inheritDoc
+     */
     public function __construct(string $message = self::MESSAGE, ?Throwable $previous = null)
     {
         parent::__construct($message, $previous);

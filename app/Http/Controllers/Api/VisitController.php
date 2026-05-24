@@ -13,7 +13,7 @@ class VisitController extends Controller
     public function track(Request $request): JsonResponse
     {
         ProcessVisitTrackJob::dispatch(
-            ip: $request->ip(),
+            ip: config('services.2ip.test_ip') ?? $request->ip(),
             userAgent: $request->userAgent(),
             latitude: $request->post('lat'),
             longitude: $request->post('lon'),

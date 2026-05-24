@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-composer install --no-interaction --optimize-autoloader --no-dev
+composer install --no-interaction --optimize-autoloader
 npm install
 npm run build
 

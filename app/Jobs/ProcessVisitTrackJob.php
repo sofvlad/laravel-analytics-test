@@ -15,6 +15,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Carbon;
 use Throwable;
+use Illuminate\Contracts\Container\BindingResolutionException;
 
 class ProcessVisitTrackJob implements ShouldQueue
 {
@@ -60,24 +61,31 @@ class ProcessVisitTrackJob implements ShouldQueue
     }
 
     /**
-     * @param TwoIpService $twoIpService
      * @param NominatimOpenstreetmapService $nominatimOpenstreetmapService
      * @return void
      */
     public function handle(
-        TwoIpService $twoIpService,
         NominatimOpenstreetmapService $nominatimOpenstreetmapService
     ): void {
         try {
-            $visit = $this->latitude !== null && $this->longitude !== null
-                ? $nominatimOpenstreetmapService->store(
+            if ($this->latitude !== null && $this->longitude !== null) {
+                $visit = $nominatimOpenstreetmapService->store(
                     $this->ip,
                     $this->userAgent,
                     $this->latitude,
                     $this->longitude,
                     $this->visitedAt
-                )
-                : $twoIpService->store($this->ip, $this->userAgent, $this->visitedAt);
+                );
+            } else {
+                try {
+                    $twoIpService = app(TwoIpService::class);
+                    $visit = $twoIpService->store($this->ip, $this->userAgent, $this->visitedAt);
+                } catch (BindingResolutionException) {
+                    Log::warning('TwoIpService skipped: token not configured');
+
+                    return;
+                }
+            }
 
             Log::debug('Geo data is successfully processed', $visit->toArray());
         } catch (Throwable $e) {
@@ -92,3 +100,4 @@ class ProcessVisitTrackJob implements ShouldQueue
         }
     }
 }
+

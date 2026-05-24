@@ -79,7 +79,12 @@ export default function VisitCharts() {
         labels: hourlyStats.labels.map(label => {
             const date = new Date(label);
 
-            return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            return date.toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+            });
         }),
         datasets: [
             {

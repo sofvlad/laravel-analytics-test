@@ -18,11 +18,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(TwoIpClient::class, function () {
-            return new TwoIpClient(
-                config('services.2ip.token')
-            );
-        });
         $this->app->singleton(VisitRepositoryInterface::class, VisitRepository::class);
     }
 
@@ -32,6 +27,19 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->registerTwoIpClient();
+    }
+
+    /**
+     * Register TwoIpClient only if token is configured.
+     */
+    protected function registerTwoIpClient(): void
+    {
+        $token = config('services.2ip.token');
+
+        if (!empty($token)) {
+            $this->app->singleton(TwoIpClient::class, fn () => new TwoIpClient($token));
+        }
     }
 
     /**
