@@ -35,6 +35,10 @@ Laravel - это фреймворк для веб-приложений с выр
 ## Запуск
 
 ```bash
-docker-compose up
+git clone https://github.com/sofvlad/laravel-analytics-test.git
+cd laravel-analytics-test
+cp .env.example .env
+docker compose up -d;
+docker exec analytics_app php artisan key:generate
 docker exec analytics_app php artisan db:seed
 ```
